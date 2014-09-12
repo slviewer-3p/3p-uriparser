@@ -1,0 +1,13 @@
+prefix=C:/Program Files (x86)/uriparser
+exec_prefix=C:/Program Files (x86)/uriparser
+libdir=C:/Program Files (x86)/uriparser/lib
+sharedlibdir=C:/Program Files (x86)/uriparser/lib
+includedir=C:/Program Files (x86)/uriparser/include
+
+Name: uriparser
+Description: uriparser library
+Version: 0.8.0.1
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}
