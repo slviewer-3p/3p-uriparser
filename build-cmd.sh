@@ -66,7 +66,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             # Debug first
             CFLAGS="$opts -O0 -gdwarf-2 -fPIC -DPIC" \
                 LDFLAGS="-Wl,-install_name,\"${install_name}\" -Wl,-headerpad_max_install_names" \
-                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/debug"
+                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/debug" --disable-test
             make
             make install
             cp -a "$top"/uriparser_darwin_debug.exp "$stage"/lib/debug/uriparser_darwin.exp
@@ -76,7 +76,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             # Now release
             CFLAGS="$opts -O3 -gdwarf-2 -fPIC -DPIC" \
                 LDFLAGS="-Wl,-install_name,\"${install_name}\" -Wl,-headerpad_max_install_names" \
-                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/release"
+                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/release" --disable-test
             make
             make install
             cp -a "$top"/uriparser_darwin_release.exp "$stage"/lib/release/uriparser_darwin.exp
@@ -120,7 +120,7 @@ pushd "$URIPARSER_SOURCE_DIR"
 
             # Debug first
             CFLAGS="$opts -O0 -g -fPIC -DPIC" CXXFLAGS="$opts -O0 -g -fPIC -DPIC" \
-                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/debug"
+                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/debug" --disable-test
             make
             make install
 
@@ -129,7 +129,7 @@ pushd "$URIPARSER_SOURCE_DIR"
 
             # Release last
             CFLAGS="$opts -O3 -fPIC -DPIC" CXXFLAGS="$opts -O3 -fPIC -DPIC" \
-                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/release"
+                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/release" --disable-test
             make
             make install
 
