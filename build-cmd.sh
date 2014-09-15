@@ -118,6 +118,9 @@ pushd "$URIPARSER_SOURCE_DIR"
                 export CPPFLAGS="$TARGET_CPPFLAGS"
             fi
 
+            # generate configue script
+            ./autogen.sh
+
             # Debug first
             CFLAGS="$opts -O0 -g -fPIC -DPIC" CXXFLAGS="$opts -O0 -g -fPIC -DPIC" \
                 ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/debug" --disable-test
