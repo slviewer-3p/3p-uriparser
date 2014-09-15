@@ -66,7 +66,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             # Debug first
             CFLAGS="$opts -O0 -gdwarf-2 -fPIC -DPIC" \
                 LDFLAGS="-Wl,-install_name,\"${install_name}\" -Wl,-headerpad_max_install_names" \
-                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/debug" --disable-test
+                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/debug" --disable-test --disable-doc
             make
             make install
             cp -a "$top"/uriparser_darwin_debug.exp "$stage"/lib/debug/uriparser_darwin.exp
@@ -76,7 +76,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             # Now release
             CFLAGS="$opts -O3 -gdwarf-2 -fPIC -DPIC" \
                 LDFLAGS="-Wl,-install_name,\"${install_name}\" -Wl,-headerpad_max_install_names" \
-                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/release" --disable-test
+                ./configure --prefix="$stage" --includedir="$stage/include/uriparser" --libdir="$stage/lib/release" --disable-test --disable-doc
             make
             make install
             cp -a "$top"/uriparser_darwin_release.exp "$stage"/lib/release/uriparser_darwin.exp
