@@ -63,6 +63,9 @@ pushd "$URIPARSER_SOURCE_DIR"
             # exist there.
             opts="${TARGET_OPTS:--arch i386 -iwithsysroot $sdk -mmacosx-version-min=10.6}"
 
+            # generate configue script
+            ./autogen.sh
+
             # Debug first
             CFLAGS="$opts -O0 -gdwarf-2 -fPIC -DPIC" \
                 LDFLAGS="-Wl,-install_name,\"${install_name}\" -Wl,-headerpad_max_install_names" \
