@@ -7,8 +7,10 @@ set -x
 # make errors fatal
 set -e
 
-URIPARSER_VERSION="0.8.0.1"
 URIPARSER_SOURCE_DIR="uriparser"
+VERSION_HEADER_FILE="${URIPARSER_SOURCE_DIR}/include/uriparser/UriBase.h"
+VERSION_MACRO="URI_VER_ANSI"
+
 
 if [ -z "$AUTOBUILD" ] ; then 
     fail
@@ -32,7 +34,18 @@ pushd "$URIPARSER_SOURCE_DIR"
         "windows")
             load_vsvars
 
-            cmake .
+            # populate version_file
+            cl /DVERSION_HEADER_FILE="\"$VERSION_HEADER_FILE\"" \
+               /DVERSION_MACRO="$VERSION_MACRO" \
+               /Fo"$(cygpath -w "$stage/version.obj")" \
+               /Fe"$(cygpath -w "$stage/version.exe")" \
+               "$(cygpath -w "$top/version.c")"
+            "$stage/version.exe" > "$stage/VERSION.txt"
+            rm "$stage"/version.{obj,exe}
+
+
+            cmake . -DVERSION:STRING="${URIPARSER_VERSION}"
+
 
             build_sln "contrib/vstudio/vc10/uriparser.sln" "Debug|Win32" "uriparser"
             build_sln "contrib/vstudio/vc10/uriparser.sln" "Release|Win32" "uriparser"
@@ -48,42 +61,26 @@ pushd "$URIPARSER_SOURCE_DIR"
         ;;
 
         "darwin")
-            # Select SDK with full path.  This shouldn't have much effect on this
-            # build but adding to establish a consistent pattern.
-            #
-            # sdk=/Developer/SDKs/MacOSX10.6.sdk/
-            # sdk=/Developer/SDKs/MacOSX10.7.sdk/
-            # sdk=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/
-            sdk=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/
+            # populate version_file
+            cc -DVERSION_HEADER_FILE="\"$VERSION_HEADER_FILE\"" \
+               -DVERSION_MACRO="$VERSION_MACRO" \
+               -o "$stage/version" "$top/version.c"
+            "$stage/version" > "$stage/VERSION.txt"
+            rm "$stage/version"
 
-
-            # Keep min version back at 10.5 if you are using the
-            # old llqtwebkit repo which builds on 10.5 systems.
-            # At 10.6, zlib will start using __bzero() which doesn't
-            # exist there.
-            opts="${TARGET_OPTS:--arch i386 -iwithsysroot $sdk -mmacosx-version-min=10.6}"
-
-            # generate configue script
-            ./autogen.sh
-
-            # Debug first
-            CFLAGS="$opts -O0 -gdwarf-2 -fPIC -DPIC" \
-                LDFLAGS="-Wl,-install_name,\"${install_name}\" -Wl,-headerpad_max_install_names" \
-                ./configure --prefix="$stage" --includedir="$stage/include" --libdir="$stage/lib/debug" --disable-test --disable-doc
+            cmake . -DCMAKE_INSTALL_PREFIX:STRING=../stage
             make
             make install
-            make distclean
-
-            # Now release
-            CFLAGS="$opts -O3 -gdwarf-2 -fPIC -DPIC" \
-                LDFLAGS="-Wl,-install_name,\"${install_name}\" -Wl,-headerpad_max_install_names" \
-                ./configure --prefix="$stage" --includedir="$stage/include" --libdir="$stage/lib/release" --disable-test --disable-doc
-            make
-            make install
-            make distclean
         ;;
 
         "linux")
+            # populate version_file
+            cc -DVERSION_HEADER_FILE="\"$VERSION_HEADER_FILE\"" \
+               -DVERSION_MACRO="$VERSION_MACRO" \
+               -o "$stage/version" "$top/version.c"
+            "$stage/version" > "$stage/VERSION.txt"
+            rm "$stage/version"
+
             # Linux build environment at Linden comes pre-polluted with stuff that can
             # seriously damage 3rd-party builds.  Environmental garbage you can expect
             # includes:

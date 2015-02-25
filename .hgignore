@@ -1,1 +1,10 @@
+syntax: glob
 stage/
+*.o
+*.tar.bz2
+CMakeFiles/
+uriparser/Makefile
+uriparser/CMakeCache.txt
+uriparser/cmake_install.cmake
+uriparser/install_manifest.txt
+uriparser/liburiparser.a

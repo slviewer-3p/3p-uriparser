@@ -3,14 +3,12 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 
 project(uriparser C)
 
-set(VERSION "0.8.0.1")
-
 option(ASM686 "Enable building i686 assembly implementation")
 option(AMD64 "Enable building amd64 assembly implementation")
 
 set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE PATH "Installation directory for executables")
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
-set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
+set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include/uriparser" CACHE PATH "Installation directory for headers")
 set(INSTALL_MAN_DIR "${CMAKE_INSTALL_PREFIX}/share/man" CACHE PATH "Installation directory for manual pages")
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Installation directory for pkgconfig (.pc) files")
 
@@ -67,6 +65,8 @@ if(MSVC)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 set(URIPARSER_PC ${CMAKE_CURRENT_BINARY_DIR}/uriparser.pc)
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/uriparser.pc.cmakein
         ${URIPARSER_PC} @ONLY)
@@ -108,12 +108,6 @@ set(URIPARSER_SRCS
     src/UriShorten.c
 )
 
-if(NOT MINGW)
-    set(URIPARSER_DLL_SRCS
-#        win32/uriparser1.rc # If present will override custom build rule below.
-    )
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCC)
     if(ASM686)
         set(URIPARSER_ASMS contrib/asm686/match.S)
@@ -147,12 +141,8 @@ if(MSVC)
     endif()
 endif()
 
-# parse the full version number from UriBase.h and include in URIPARSER_FULL_VERSION
-#file(READ ${CMAKE_CURRENT_SOURCE_DIR}/uriparser/UriBase.h _uriparser_h_contents)
-#string(REGEX REPLACE ".*#define[ \t]+URIPARSER_VERSION[ \t]+\"([-0-9A-Za-z.]+)\".*"
-    #"\\1" URIPARSER_FULL_VERSION ${_uriparser_h_contents})
-    
-set(URIPARSER_FULL_VERSION "0.8.0.1")
+# get the full version number 
+FILE(READ ${CMAKE_INSTALL_PREFIX}/VERSION.txt URIPARSER_FULL_VERSION)
 
 if(MINGW)
     # This gets us DLL resource information when compiling on MinGW.
@@ -170,11 +160,27 @@ if(MINGW)
     set(URIPARSER_DLL_SRCS ${CMAKE_CURRENT_BINARY_DIR}/uriparser1rc.obj)
 endif(MINGW)
 
-#add_library(uriparser SHARED ${URIPARSER_SRCS} ${URIPARSER_ASMS} ${URIPARSER_DLL_SRCS} ${URIPARSER_PUBLIC_HDRS} ${URIPARSER_PRIVATE_HDRS})
-add_library(uriparser SHARED ${URIPARSER_SRCS} ${URIPARSER_ASMS} ${URIPARSER_DLL_SRCS} ${URIPARSER_PUBLIC_HDRS} ${URIPARSER_PRIVATE_HDRS})
-add_library(uriparserstatic STATIC ${URIPARSER_SRCS} ${URIPARSER_ASMS} ${URIPARSER_PUBLIC_HDRS} ${URIPARSER_PRIVATE_HDRS})
-set_target_properties(uriparser PROPERTIES DEFINE_SYMBOL URIPARSER_DLL)
-set_target_properties(uriparser PROPERTIES SOVERSION 1)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(DARWIN 1)
+  
+  # Xcode 6.1 using 10.10 (Yosemite), minimum OS 10.7 (Lion)
+  set(XCODE_VERSION 6.1)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+  set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/)
+
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvm.clang.1_0")
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_OPTIMIZATION_LEVEL 3)
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_STRICT_ALIASING NO)
+  set(CMAKE_XCODE_ATTRIBUTE_GCC_FAST_MATH YES)
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_X86_VECTOR_INSTRUCTIONS ssse3)
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
+  set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf-with-dsym)
+  # Build only for i386 by default, system default on MacOSX 10.6+ is x86_64
+  set(CMAKE_OSX_ARCHITECTURES i386)
+
+endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+add_library(uriparser STATIC ${URIPARSER_SRCS} ${URIPARSER_ASMS} ${URIPARSER_PUBLIC_HDRS} ${URIPARSER_PRIVATE_HDRS})
 
 if(NOT CYGWIN)
     # This property causes shared libraries on Linux to have the full version
@@ -189,7 +195,7 @@ endif()
 
 if(UNIX)
     # On unix-like platforms the library is almost always called libz
-   set_target_properties(uriparser uriparserstatic PROPERTIES OUTPUT_NAME z)
+   #set_target_properties(uriparser PROPERTIES OUTPUT_NAME z)
    if(NOT APPLE)
      set_target_properties(uriparser PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/uriparser.map\"")
    endif()
@@ -199,7 +205,7 @@ elseif(BUILD_SHARED_LIBS AND WIN32)
 endif()
 
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
-    install(TARGETS uriparser uriparserstatic
+    install(TARGETS uriparser 
         RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
         ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
         LIBRARY DESTINATION "${INSTALL_LIB_DIR}" )
@@ -207,31 +213,4 @@ endif()
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL )
     install(FILES ${URIPARSER_PUBLIC_HDRS} DESTINATION "${INSTALL_INC_DIR}")
 endif()
-if(NOT SKIP_INSTALL_FILES AND NOT SKIP_INSTALL_ALL )
-    install(FILES uriparser.3 DESTINATION "${INSTALL_MAN_DIR}/man3")
-endif()
-if(NOT SKIP_INSTALL_FILES AND NOT SKIP_INSTALL_ALL )
-    install(FILES ${URIPARSER_PC} DESTINATION "${INSTALL_PKGCONFIG_DIR}")
-endif()
 
-#============================================================================
-# Example binaries
-#============================================================================
-
-#add_executable(example test/example.c)
-#target_link_libraries(example uriparser)
-#add_test(example example)
-
-#add_executable(minigzip test/minigzip.c)
-#target_link_libraries(minigzip uriparser)
-
-#if(HAVE_OFF64_T)
-    #add_executable(example64 test/example.c)
-    #target_link_libraries(example64 uriparser)
-    #set_target_properties(example64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
-    #add_test(example64 example64)
-
-    #add_executable(minigzip64 test/minigzip.c)
-    #target_link_libraries(minigzip64 uriparser)
-    #set_target_properties(minigzip64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
-#endif()
