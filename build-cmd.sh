@@ -43,7 +43,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             "$stage/version.exe" > "$stage/VERSION.txt"
             rm "$stage"/version.{obj,exe}
 
-            cmake . -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath ${stage})"
+            cmake . -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath -w ${stage})"
 
             build_sln "contrib/vstudio/vc10/uriparser.sln" "Debug|Win32" "uriparser"
             build_sln "contrib/vstudio/vc10/uriparser.sln" "Release|Win32" "uriparser"
