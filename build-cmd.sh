@@ -43,9 +43,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             "$stage/version.exe" > "$stage/VERSION.txt"
             rm "$stage"/version.{obj,exe}
 
-
-            cmake . -DVERSION:STRING="${URIPARSER_VERSION}"
-
+            cmake . -DCMAKE_INSTALL_PREFIX:STRING="${stage}"
 
             build_sln "contrib/vstudio/vc10/uriparser.sln" "Debug|Win32" "uriparser"
             build_sln "contrib/vstudio/vc10/uriparser.sln" "Release|Win32" "uriparser"
@@ -68,7 +66,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             "$stage/version" > "$stage/VERSION.txt"
             rm "$stage/version"
 
-            cmake . -DCMAKE_INSTALL_PREFIX:STRING=../stage
+            cmake . -DCMAKE_INSTALL_PREFIX:STRING="${stage}"
             make
             make install
         ;;
