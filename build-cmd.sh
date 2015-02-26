@@ -45,14 +45,16 @@ pushd "$URIPARSER_SOURCE_DIR"
 
             cmake . -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath -w ${stage})"
 
-            build_sln "contrib/vstudio/vc10/uriparser.sln" "Debug|Win32" "uriparser"
-            build_sln "contrib/vstudio/vc10/uriparser.sln" "Release|Win32" "uriparser"
+            build_sln "uriparser.sln" "Debug|Win32" "uriparser"
+            build_sln "uriparser.sln" "Release|Win32" "uriparser"
 
             mkdir -p "$stage/lib/debug"
             mkdir -p "$stage/lib/release"
-            cp -a "contrib/vstudio/vc10/x86/UriParserStatDebug/uriparser.lib" \
+            cp -a "Debug/uriparserd.lib" \
                 "$stage/lib/debug/uriparserd.lib"
-            cp -a "contrib/vstudio/vc10/x86/UriParserStatRelease/uriparser.lib" \
+            cp -a "uriparser.dir/Debug/vc120.pdb" \
+                "$stage/lib/debug/uriparserd.pdb"
+            cp -a "Release/uriparser.lib" \
                 "$stage/lib/release/uriparser.lib"
             mkdir -p "$stage/include/uriparser"
             cp -a include/uriparser/*.h "$stage/include/uriparser"

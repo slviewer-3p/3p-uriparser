@@ -194,14 +194,9 @@ if(NOT CYGWIN)
 endif()
 
 if(UNIX)
-    # On unix-like platforms the library is almost always called libz
-   #set_target_properties(uriparser PROPERTIES OUTPUT_NAME z)
    if(NOT APPLE)
      set_target_properties(uriparser PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/uriparser.map\"")
    endif()
-elseif(BUILD_SHARED_LIBS AND WIN32)
-    # Creates uriparser1.dll when building shared library version
-    set_target_properties(uriparser PROPERTIES SUFFIX "1.dll")
 endif()
 
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )

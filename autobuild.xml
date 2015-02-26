@@ -106,10 +106,9 @@
           </map>
           <key>manifest</key>
           <array>
-            <string>lib/debug/*.pdb</string>
-            <string>lib/debug/*.lib</string>
-            <string>lib/release/*.pdb</string>
-            <string>lib/release/*.lib</string>
+            <string>lib/debug/uriparserd.pdb</string>
+            <string>lib/debug/uriparserd.lib</string>
+            <string>lib/release/uriparser.lib</string>
           </array>
           <key>name</key>
           <string>windows</string>
