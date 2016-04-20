@@ -31,7 +31,7 @@ stage="$top"/stage
 pushd "$URIPARSER_SOURCE_DIR"
     case "$AUTOBUILD_PLATFORM" in
 
-        "windows")
+        windows*)
             load_vsvars
 
             # populate version_file
@@ -43,17 +43,11 @@ pushd "$URIPARSER_SOURCE_DIR"
             "$stage/version.exe" > "$stage/VERSION.txt"
             rm "$stage"/version.{obj,exe}
 
-            cmake . -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath -w ${stage})"
+            cmake . -G "$AUTOBUILD_WIN_CMAKE_GEN" -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath -w ${stage})"
 
-            build_sln "uriparser.sln" "Debug|Win32" "uriparser"
-            build_sln "uriparser.sln" "Release|Win32" "uriparser"
+            build_sln "uriparser.sln" "Release|$AUTOBUILD_WIN_VSPLATFORM" "uriparser"
 
-            mkdir -p "$stage/lib/debug"
             mkdir -p "$stage/lib/release"
-            cp -a "Debug/uriparserd.lib" \
-                "$stage/lib/debug/uriparserd.lib"
-            cp -a "uriparser.dir/Debug/vc120.pdb" \
-                "$stage/lib/debug/uriparserd.pdb"
             cp -a "Release/uriparser.lib" \
                 "$stage/lib/release/uriparser.lib"
             mkdir -p "$stage/include/uriparser"

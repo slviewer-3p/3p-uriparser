@@ -83,7 +83,6 @@
           </map>
           <key>manifest</key>
           <array>
-            <string>lib/debug/*.a</string>
             <string>lib/release/*.a</string>
           </array>
           <key>name</key>
@@ -106,8 +105,6 @@
           </map>
           <key>manifest</key>
           <array>
-            <string>lib/debug/uriparserd.pdb</string>
-            <string>lib/debug/uriparserd.lib</string>
             <string>lib/release/uriparser.lib</string>
           </array>
           <key>name</key>
