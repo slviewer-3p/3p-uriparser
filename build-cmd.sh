@@ -56,7 +56,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             cp -a include/uriparser/*.h "$stage/include/uriparser"
         ;;
 
-        "darwin")
+        darwin*)
             # populate version_file
             cc -DVERSION_HEADER_FILE="\"$VERSION_HEADER_FILE\"" \
                -DVERSION_MACRO="$VERSION_MACRO" \
@@ -69,7 +69,7 @@ pushd "$URIPARSER_SOURCE_DIR"
             make install
         ;;
 
-        "linux")
+        linux*)
             # populate version_file
             cc -DVERSION_HEADER_FILE="\"$VERSION_HEADER_FILE\"" \
                -DVERSION_MACRO="$VERSION_MACRO" \
