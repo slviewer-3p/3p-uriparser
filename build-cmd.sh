@@ -45,7 +45,10 @@ pushd "$URIPARSER_SOURCE_DIR"
             "$stage/version.exe" > "$stage/VERSION.txt"
             rm "$stage"/version.{obj,exe}
 
-            cmake . -G "$AUTOBUILD_WIN_CMAKE_GEN" -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath -w ${stage})"
+            cmake . -G "$AUTOBUILD_WIN_CMAKE_GEN" \
+                  -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath -w ${stage})" \
+                  -DCMAKE_CXX_FLAGS="$LL_BUILD_RELEASE" \
+                  -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE"
 
             build_sln "uriparser.sln" "Release|$AUTOBUILD_WIN_VSPLATFORM" "uriparser"
 
@@ -64,7 +67,9 @@ pushd "$URIPARSER_SOURCE_DIR"
             "$stage/version" > "$stage/VERSION.txt"
             rm "$stage/version"
 
-            cmake . -DCMAKE_INSTALL_PREFIX:STRING="${stage}"
+            cmake . -DCMAKE_INSTALL_PREFIX:STRING="${stage}" \
+                  -DCMAKE_CXX_FLAGS="$LL_BUILD_RELEASE" \
+                  -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE"
             make
             make install
         ;;
@@ -92,17 +97,10 @@ pushd "$URIPARSER_SOURCE_DIR"
             #
             # unset DISTCC_HOSTS CC CXX CFLAGS CPPFLAGS CXXFLAGS
 
-            # Prefer gcc-4.6 if available.
-            if [[ -x /usr/bin/gcc-4.6 && -x /usr/bin/g++-4.6 ]]; then
-                export CC=/usr/bin/gcc-4.6
-                export CXX=/usr/bin/g++-4.6
-            fi
-
-            # Default target to 32-bit
-            opts="${TARGET_OPTS:--m32}"
+            opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"
 
             # Handle any deliberate platform targeting
-            if [ -z "$TARGET_CPPFLAGS" ]; then
+            if [ -z "${TARGET_CPPFLAGS:-}" ]; then
                 # Remove sysroot contamination from build environment
                 unset CPPFLAGS
             else
@@ -110,21 +108,13 @@ pushd "$URIPARSER_SOURCE_DIR"
                 export CPPFLAGS="$TARGET_CPPFLAGS"
             fi
 
-            # generate configue script
+            # generate configure script
             ./autogen.sh
 
-            # Debug first
-            CFLAGS="$opts -O0 -g -fPIC -DPIC" CXXFLAGS="$opts -O0 -g -fPIC -DPIC" \
-                ./configure --prefix="$stage" --includedir="$stage/include" --libdir="$stage/lib/debug" --disable-test
-            make
-            make install
-
-            # clean the build artifacts
-            make distclean
-
-            # Release last
-            CFLAGS="$opts -O3 -fPIC -DPIC" CXXFLAGS="$opts -O3 -fPIC -DPIC" \
-                ./configure --prefix="$stage" --includedir="$stage/include" --libdir="$stage/lib/release" --disable-test
+            # Release
+            CFLAGS="$opts" CXXFLAGS="$opts" \
+                ./configure --prefix="$stage" \
+                --includedir="$stage/include" --libdir="$stage/lib/release" --disable-test
             make
             make install
 
