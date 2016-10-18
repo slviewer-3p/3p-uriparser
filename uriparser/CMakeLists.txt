@@ -160,26 +160,6 @@ if(MINGW)
     set(URIPARSER_DLL_SRCS ${CMAKE_CURRENT_BINARY_DIR}/uriparser1rc.obj)
 endif(MINGW)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  set(DARWIN 1)
-  
-  # Xcode 6.1 using 10.10 (Yosemite), minimum OS 10.7 (Lion)
-  set(XCODE_VERSION 6.1)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
-  set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/)
-
-  set(CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvm.clang.1_0")
-  set(CMAKE_XCODE_ATTRIBUTE_GCC_OPTIMIZATION_LEVEL 3)
-  set(CMAKE_XCODE_ATTRIBUTE_GCC_STRICT_ALIASING NO)
-  set(CMAKE_XCODE_ATTRIBUTE_GCC_FAST_MATH YES)
-  set(CMAKE_XCODE_ATTRIBUTE_CLANG_X86_VECTOR_INSTRUCTIONS ssse3)
-  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
-  set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf-with-dsym)
-  # Build only for i386 by default, system default on MacOSX 10.6+ is x86_64
-  set(CMAKE_OSX_ARCHITECTURES i386)
-
-endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
 add_library(uriparser STATIC ${URIPARSER_SRCS} ${URIPARSER_ASMS} ${URIPARSER_PUBLIC_HDRS} ${URIPARSER_PRIVATE_HDRS})
 
 if(NOT CYGWIN)
