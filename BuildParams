@@ -1,5 +1,7 @@
 # Use Public Upload Locations
 public_build = true
 
-# autobuild uses VS2010
-AUTOBUILD_VSVER=100
+
+# Need viewer-build-variables as well as other shared repositories
+# build_variables_repository_url set in TC project hierarchy
+buildscripts_shared_more_NAMEs="build_variables"
