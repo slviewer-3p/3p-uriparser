@@ -2,35 +2,35 @@
  * uriparser - RFC 3986 URI parsing library
  *
  * Copyright (C) 2007, Weijia Song <songweijia@gmail.com>
- * Copyright (C) 2007, Sebastian Pipping <webmaster@hartwork.org>
+ * Copyright (C) 2007, Sebastian Pipping <sebastian@pipping.org>
  * All rights reserved.
  *
- * Redistribution  and use in source and binary forms, with or without
- * modification,  are permitted provided that the following conditions
+ * Redistribution and use in source  and binary forms, with or without
+ * modification, are permitted provided  that the following conditions
  * are met:
  *
- *     * Redistributions   of  source  code  must  retain  the   above
- *       copyright  notice, this list of conditions and the  following
- *       disclaimer.
+ *     1. Redistributions  of  source  code   must  retain  the  above
+ *        copyright notice, this list  of conditions and the following
+ *        disclaimer.
  *
- *     * Redistributions  in  binary  form must  reproduce  the  above
- *       copyright  notice, this list of conditions and the  following
- *       disclaimer   in  the  documentation  and/or  other  materials
- *       provided with the distribution.
+ *     2. Redistributions  in binary  form  must  reproduce the  above
+ *        copyright notice, this list  of conditions and the following
+ *        disclaimer  in  the  documentation  and/or  other  materials
+ *        provided with the distribution.
  *
- *     * Neither  the name of the <ORGANIZATION> nor the names of  its
- *       contributors  may  be  used to endorse  or  promote  products
- *       derived  from  this software without specific  prior  written
- *       permission.
+ *     3. Neither the  name of the  copyright holder nor the  names of
+ *        its contributors may be used  to endorse or promote products
+ *        derived from  this software  without specific  prior written
+ *        permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT  NOT
- * LIMITED  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND  FITNESS
- * FOR  A  PARTICULAR  PURPOSE ARE DISCLAIMED. IN NO EVENT  SHALL  THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL,    SPECIAL,   EXEMPLARY,   OR   CONSEQUENTIAL   DAMAGES
- * (INCLUDING,  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES;  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * "AS IS" AND  ANY EXPRESS OR IMPLIED WARRANTIES,  INCLUDING, BUT NOT
+ * LIMITED TO,  THE IMPLIED WARRANTIES OF  MERCHANTABILITY AND FITNESS
+ * FOR  A  PARTICULAR  PURPOSE  ARE  DISCLAIMED.  IN  NO  EVENT  SHALL
+ * THE  COPYRIGHT HOLDER  OR CONTRIBUTORS  BE LIABLE  FOR ANY  DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL,  EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO,  PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA,  OR PROFITS; OR BUSINESS INTERRUPTION)
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
  * STRICT  LIABILITY,  OR  TORT (INCLUDING  NEGLIGENCE  OR  OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
@@ -67,22 +67,36 @@
 
 
 
+#include <stdlib.h>  /* for size_t, avoiding stddef.h for older MSVCs */
+
+
+
 static URI_INLINE int URI_FUNC(FilenameToUriString)(const URI_CHAR * filename,
 		URI_CHAR * uriString, UriBool fromUnix) {
 	const URI_CHAR * input = filename;
 	const URI_CHAR * lastSep = input - 1;
 	UriBool firstSegment = URI_TRUE;
 	URI_CHAR * output = uriString;
-	const UriBool absolute = (filename != NULL) && ((fromUnix && (filename[0] == _UT('/')))
-			|| (!fromUnix && (filename[0] != _UT('\0')) && (filename[1] == _UT(':'))));
+	UriBool absolute;
+	UriBool is_windows_network;
 
 	if ((filename == NULL) || (uriString == NULL)) {
 		return URI_ERROR_NULL;
 	}
 
+	is_windows_network = (filename[0] == _UT('\\')) && (filename[1] == _UT('\\'));
+	absolute = fromUnix
+			? (filename[0] == _UT('/'))
+			: (((filename[0] != _UT('\0')) && (filename[1] == _UT(':')))
+				|| is_windows_network);
+
 	if (absolute) {
-		const URI_CHAR * const prefix = fromUnix ? _UT("file://") : _UT("file:///");
-		const int prefixLen = fromUnix ? 7 : 8;
+		const URI_CHAR * const prefix = fromUnix
+				? _UT("file://")
+				: is_windows_network
+					? _UT("file:")
+					: _UT("file:///");
+		const size_t prefixLen = URI_STRLEN(prefix);
 
 		/* Copy prefix */
 		memcpy(uriString, prefix, prefixLen * sizeof(URI_CHAR));
@@ -94,7 +108,7 @@ static URI_INLINE int URI_FUNC(FilenameToUriString)(const URI_CHAR * filename,
 		if ((input[0] == _UT('\0'))
 				|| (fromUnix && input[0] == _UT('/'))
 				|| (!fromUnix && input[0] == _UT('\\'))) {
-			/* Copy text after last seperator */
+			/* Copy text after last separator */
 			if (lastSep + 1 < input) {
 				if (!fromUnix && absolute && (firstSegment == URI_TRUE)) {
 					/* Quick hack to not convert "C:" to "C%3A" */
@@ -133,19 +147,61 @@ static URI_INLINE int URI_FUNC(FilenameToUriString)(const URI_CHAR * filename,
 
 static URI_INLINE int URI_FUNC(UriStringToFilename)(const URI_CHAR * uriString,
 		URI_CHAR * filename, UriBool toUnix) {
-	const URI_CHAR * const prefix = toUnix ? _UT("file://") : _UT("file:///");
-	const int prefixLen = toUnix ? 7 : 8;
-	URI_CHAR * walker = filename;
-	size_t charsToCopy;
-	const UriBool absolute = (URI_STRNCMP(uriString, prefix, prefixLen) == 0);
-	const int charsToSkip = (absolute ? prefixLen : 0);
+	if ((uriString == NULL) || (filename == NULL)) {
+		return URI_ERROR_NULL;
+	}
 
-	charsToCopy = URI_STRLEN(uriString + charsToSkip) + 1;
-	memcpy(filename, uriString + charsToSkip, charsToCopy * sizeof(URI_CHAR));
-	URI_FUNC(UnescapeInPlaceEx)(filename, URI_FALSE, URI_BR_DONT_TOUCH);
+	{
+		const UriBool file_unknown_slashes =
+				URI_STRNCMP(uriString, _UT("file:"), URI_STRLEN(_UT("file:"))) == 0;
+		const UriBool file_one_or_more_slashes = file_unknown_slashes
+				&& (URI_STRNCMP(uriString, _UT("file:/"), URI_STRLEN(_UT("file:/"))) == 0);
+		const UriBool file_two_or_more_slashes = file_one_or_more_slashes
+				&& (URI_STRNCMP(uriString, _UT("file://"), URI_STRLEN(_UT("file://"))) == 0);
+		const UriBool file_three_or_more_slashes = file_two_or_more_slashes
+				&& (URI_STRNCMP(uriString, _UT("file:///"), URI_STRLEN(_UT("file:///"))) == 0);
+
+		const size_t charsToSkip = file_two_or_more_slashes
+				? file_three_or_more_slashes
+					? toUnix
+						/* file:///bin/bash */
+						? URI_STRLEN(_UT("file://"))
+						/* file:///E:/Documents%20and%20Settings */
+						: URI_STRLEN(_UT("file:///"))
+					/* file://Server01/Letter.txt */
+					: URI_STRLEN(_UT("file://"))
+				: ((file_one_or_more_slashes && toUnix)
+					/* file:/bin/bash */
+					/* https://tools.ietf.org/html/rfc8089#appendix-B */
+					? URI_STRLEN(_UT("file:"))
+					: ((! toUnix && file_unknown_slashes && ! file_one_or_more_slashes)
+						/* file:c:/path/to/file */
+						/* https://tools.ietf.org/html/rfc8089#appendix-E.2 */
+						? URI_STRLEN(_UT("file:"))
+						: 0));
+		const size_t charsToCopy = URI_STRLEN(uriString + charsToSkip) + 1;
+
+		const UriBool is_windows_network_with_authority =
+				(toUnix == URI_FALSE)
+				&& file_two_or_more_slashes
+				&& ! file_three_or_more_slashes;
+
+		URI_CHAR * const unescape_target = is_windows_network_with_authority
+				? (filename + 2)
+				: filename;
+
+		if (is_windows_network_with_authority) {
+			filename[0] = '\\';
+			filename[1] = '\\';
+		}
+
+		memcpy(unescape_target, uriString + charsToSkip, charsToCopy * sizeof(URI_CHAR));
+		URI_FUNC(UnescapeInPlaceEx)(filename, URI_FALSE, URI_BR_DONT_TOUCH);
+	}
 
 	/* Convert forward slashes to backslashes */
 	if (!toUnix) {
+		URI_CHAR * walker = filename;
 		while (walker[0] != _UT('\0')) {
 			if (walker[0] == _UT('/')) {
 				walker[0] = _UT('\\');

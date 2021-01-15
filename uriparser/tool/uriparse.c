@@ -5,32 +5,32 @@
  * Copyright (C) 2013, Sebastian Pipping <sebastian@pipping.org>
  * All rights reserved.
  *
- * Redistribution  and use in source and binary forms, with or without
- * modification,  are permitted provided that the following conditions
+ * Redistribution and use in source  and binary forms, with or without
+ * modification, are permitted provided  that the following conditions
  * are met:
  *
- *     * Redistributions   of  source  code  must  retain  the   above
- *       copyright  notice, this list of conditions and the  following
- *       disclaimer.
+ *     1. Redistributions  of  source  code   must  retain  the  above
+ *        copyright notice, this list  of conditions and the following
+ *        disclaimer.
  *
- *     * Redistributions  in  binary  form must  reproduce  the  above
- *       copyright  notice, this list of conditions and the  following
- *       disclaimer   in  the  documentation  and/or  other  materials
- *       provided with the distribution.
+ *     2. Redistributions  in binary  form  must  reproduce the  above
+ *        copyright notice, this list  of conditions and the following
+ *        disclaimer  in  the  documentation  and/or  other  materials
+ *        provided with the distribution.
  *
- *     * Neither  the name of the <ORGANIZATION> nor the names of  its
- *       contributors  may  be  used to endorse  or  promote  products
- *       derived  from  this software without specific  prior  written
- *       permission.
+ *     3. Neither the  name of the  copyright holder nor the  names of
+ *        its contributors may be used  to endorse or promote products
+ *        derived from  this software  without specific  prior written
+ *        permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT  NOT
- * LIMITED  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND  FITNESS
- * FOR  A  PARTICULAR  PURPOSE ARE DISCLAIMED. IN NO EVENT  SHALL  THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL,    SPECIAL,   EXEMPLARY,   OR   CONSEQUENTIAL   DAMAGES
- * (INCLUDING,  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES;  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * "AS IS" AND  ANY EXPRESS OR IMPLIED WARRANTIES,  INCLUDING, BUT NOT
+ * LIMITED TO,  THE IMPLIED WARRANTIES OF  MERCHANTABILITY AND FITNESS
+ * FOR  A  PARTICULAR  PURPOSE  ARE  DISCLAIMED.  IN  NO  EVENT  SHALL
+ * THE  COPYRIGHT HOLDER  OR CONTRIBUTORS  BE LIABLE  FOR ANY  DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL,  EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO,  PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA,  OR PROFITS; OR BUSINESS INTERRUPTION)
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
  * STRICT  LIABILITY,  OR  TORT (INCLUDING  NEGLIGENCE  OR  OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
@@ -39,8 +39,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <uriparser/Uri.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# ifdef __MINGW32__
+WINSOCK_API_LINKAGE const char WSAAPI inet_ntop(
+		int af, const void *src, char *dst, socklen_t size);
+# endif
+#else
+# include <sys/socket.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
+#endif
 
 
 #define RANGE(x)  (int)((x).afterLast-(x).first), ((x).first)
@@ -75,7 +86,8 @@ int main(int argc, char *argv[]) {
 						: (state.errorCode == URI_ERROR_MALLOC)
 							? "not enough memory"
 							: "liburiparser bug (please report)",
-					state.errorPos, state.errorPos - argv[i]);
+					state.errorPos,
+					(long unsigned int)(state.errorPos - argv[i]));
 			retval = EXIT_FAILURE;
 		} else {
 			if (uri.scheme.first) {
@@ -110,7 +122,15 @@ int main(int argc, char *argv[]) {
 			if (uri.fragment.first) {
 				printf("fragment:     %.*s\n", RANGE(uri.fragment));
 			}
-			printf("absolutePath: %s\n", (uri.absolutePath == URI_TRUE) ? "true" : "false");
+			{
+				const char * const absolutePathLabel = "absolutePath: ";
+				printf("%s%s\n", absolutePathLabel,
+						(uri.absolutePath == URI_TRUE) ? "true" : "false");
+				if (uri.hostText.first != NULL) {
+					printf("%*s%s\n", (int)strlen(absolutePathLabel), "",
+							"(always false for URIs with host)");
+				}
+			}
 		}
 		printf("\n");
 

@@ -1,7 +1,7 @@
 /*
  * uriparser - RFC 3986 URI parsing library
  *
- * Copyright (C) 2014, Sebastian Pipping <webmaster@hartwork.org>
+ * Copyright (C) 2014, Sebastian Pipping <sebastian@pipping.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,24 +18,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "VersionSuite.h"
+#include <gtest/gtest.h>
 
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE  // for asprintf
-#endif
-#include <stdio.h>
+#include <cstdio>
 
 
 #include <config.h>  // for PACKAGE_VERSION
 #include <uriparser/UriBase.h>
 
 
-void VersionSuite::ensure_version_defines_in_sync() {
-	char * INSIDE_VERSION = NULL;
-	const int bytes_printed = asprintf(&INSIDE_VERSION, "%d.%d.%d%s",
+TEST(VersionSuite, EnsureVersionDefinesInSync) {
+	char INSIDE_VERSION[256];
+	const int bytes_printed = sprintf(INSIDE_VERSION, "%d.%d.%d%s",
 			URI_VER_MAJOR, URI_VER_MINOR, URI_VER_RELEASE, URI_VER_SUFFIX_ANSI);
-	TEST_ASSERT(bytes_printed != -1);
-	printf("bytes_printed: %d\n", bytes_printed);
+	ASSERT_TRUE(bytes_printed != -1);
 
 	const bool equal = !strcmp(INSIDE_VERSION, PACKAGE_VERSION);
 	if (! equal) {
@@ -43,6 +39,5 @@ void VersionSuite::ensure_version_defines_in_sync() {
 		printf("  Tarball version:         <%s>\n", PACKAGE_VERSION);
 		printf("  Header defines version:  <%s>\n", INSIDE_VERSION);
 	}
-	free(INSIDE_VERSION);
-	TEST_ASSERT(equal);
+	ASSERT_TRUE(equal);
 }
