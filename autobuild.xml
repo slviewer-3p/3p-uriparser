@@ -63,7 +63,9 @@
           </map>
           <key>manifest</key>
           <array>
-            <string>lib/liburiparser.a</string>
+            <string>lib/release/liburiparser.dylib</string>
+            <string>lib/release/liburiparser.1.dylib</string>
+            <string>lib/release/liburiparser.1.0.27.dylib</string>
           </array>
           <key>name</key>
           <string>darwin</string>

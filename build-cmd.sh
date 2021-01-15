@@ -79,10 +79,22 @@ pushd "$URIPARSER_SOURCE_DIR"
             make
             make install
 
+            stage_lib="${stage}"/lib
+            stage_release="${stage_lib}"/release
+
+            # Move the libs to release folder
+            mv "${stage}"/lib "${stage}"/release
+            mkdir "${stage_lib}"
+            mv "${stage}"/release "${stage_release}"
+
+
             # Make sure libs are stamped with the -id
-            pushd "$stage/lib"
-            fix_dylib_id "liburiparser.dylib" || \
-            echo "fix_dylib_id liburiparser.dylib failed, proceeding"
+            # fix_dylib_id doesn't really handle symlinks
+            pushd "$stage_release"
+            fix_dylib_id "liburiparser.1.0.27.dylib" || \
+                echo "fix_dylib_id liburiparser.dylib failed, proceeding"
+            fix_dylib_id "liburiparser.1.dylib" || \
+                echo "fix_dylib_id liburiparser.dylib failed, proceeding"
             popd
         ;;
 
