@@ -57,6 +57,8 @@ pushd "$URIPARSER_SOURCE_DIR"
             mkdir -p "$stage/lib/release"
             cp -a "Release/uriparser.lib" \
                 "$stage/lib/release/uriparser.lib"
+            cp -a "Release/uriparser.dll" \
+                "$stage/lib/release/uriparser.dll"
             mkdir -p "$stage/include/uriparser"
             cp -a include/uriparser/*.h "$stage/include/uriparser"
         ;;
@@ -76,6 +78,12 @@ pushd "$URIPARSER_SOURCE_DIR"
                   -DURIPARSER_BUILD_DOCS=OFF
             make
             make install
+
+            # Make sure libs are stamped with the -id
+            pushd "$stage/lib"
+            fix_dylib_id "liburiparser.dylib" || \
+            echo "fix_dylib_id liburiparser.dylib failed, proceeding"
+            popd
         ;;
 
         linux*)

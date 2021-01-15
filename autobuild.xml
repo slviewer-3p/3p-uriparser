@@ -108,6 +108,7 @@
           <key>manifest</key>
           <array>
             <string>lib/release/uriparser.lib</string>
+            <string>lib/release/uriparser.dll</string>
           </array>
           <key>name</key>
           <string>windows</string>
