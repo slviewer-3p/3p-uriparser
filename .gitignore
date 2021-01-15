@@ -1,0 +1,7 @@
+uriparser/.vs
+uriparser/Release
+uriparser/uriparser.dir
+uriparser/Win32
+stage/
+*.tar.bz2
+uriparser/CMakeCache.txt

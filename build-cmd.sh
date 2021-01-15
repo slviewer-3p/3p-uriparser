@@ -48,7 +48,9 @@ pushd "$URIPARSER_SOURCE_DIR"
             cmake . -G "$AUTOBUILD_WIN_CMAKE_GEN" \
                   -DCMAKE_INSTALL_PREFIX:STRING="$(cygpath -w ${stage})" \
                   -DCMAKE_CXX_FLAGS="$LL_BUILD_RELEASE" \
-                  -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE"
+                  -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE" \
+                  -DURIPARSER_BUILD_TESTS=OFF \
+                  -DURIPARSER_BUILD_DOCS=OFF
 
             build_sln "uriparser.sln" "Release|$AUTOBUILD_WIN_VSPLATFORM" "uriparser"
 
@@ -69,7 +71,9 @@ pushd "$URIPARSER_SOURCE_DIR"
 
             cmake . -DCMAKE_INSTALL_PREFIX:STRING="${stage}" \
                   -DCMAKE_CXX_FLAGS="$LL_BUILD_RELEASE" \
-                  -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE"
+                  -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE" \
+                  -DURIPARSER_BUILD_TESTS=OFF \
+                  -DURIPARSER_BUILD_DOCS=OFF
             make
             make install
         ;;
