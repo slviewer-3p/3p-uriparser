@@ -106,20 +106,6 @@ pushd "$URIPARSER_SOURCE_DIR"
             "$stage/version" > "$stage/VERSION.txt"
             rm "$stage/version"
 
-            # Linux build environment at Linden comes pre-polluted with stuff that can
-            # seriously damage 3rd-party builds.  Environmental garbage you can expect
-            # includes:
-            #
-            #    DISTCC_POTENTIAL_HOSTS     arch           root        CXXFLAGS
-            #    DISTCC_LOCATION            top            branch      CC
-            #    DISTCC_HOSTS               build_name     suffix      CXX
-            #    LSDISTCC_ARGS              repo           prefix      CFLAGS
-            #    cxx_version                AUTOBUILD      SIGN        CPPFLAGS
-            #
-            # So, clear out bits that shouldn't affect our configure-directed build
-            # but which do nonetheless.
-            #
-            # unset DISTCC_HOSTS CC CXX CFLAGS CPPFLAGS CXXFLAGS
 
             opts="${TARGET_OPTS:--m$AUTOBUILD_ADDRSIZE $LL_BUILD_RELEASE}"
 
@@ -132,19 +118,22 @@ pushd "$URIPARSER_SOURCE_DIR"
                 export CPPFLAGS="$TARGET_CPPFLAGS"
             fi
 
-            # generate configure script
-            ./autogen.sh
+            rm -rf build && mkdir build && pushd build
 
-            # Release
-            CFLAGS="$opts" CXXFLAGS="$opts" \
-                ./configure --prefix="$stage" \
-                --includedir="$stage/include" --libdir="$stage/lib/release" --disable-test
-            make
+            cmake .. -DCMAKE_INSTALL_PREFIX:STRING="${stage}" \
+                  -DCMAKE_CXX_FLAGS="$LL_BUILD_RELEASE" \
+                  -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE" \
+                  -DURIPARSER_BUILD_TESTS=OFF \
+                  -DURIPARSER_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=OFF
+
+            make -j $AUTOBUILD_CPU_COUNT
             make install
 
-            # clean the build artifacts
-            make distclean
-        ;;
+            popd
+            mkdir -p "${stage}/lib/release"
+            mv ${stage}/lib/*.a "${stage}/lib/release"
+
+			;;
     esac
     mkdir -p "$stage/LICENSES"
     pwd
