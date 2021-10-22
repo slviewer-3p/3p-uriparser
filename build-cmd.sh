@@ -95,6 +95,19 @@ pushd "$URIPARSER_SOURCE_DIR"
                 echo "fix_dylib_id liburiparser.dylib failed, proceeding"
             fix_dylib_id "liburiparser.1.dylib" || \
                 echo "fix_dylib_id liburiparser.dylib failed, proceeding"
+
+            CONFIG_FILE="$build_secrets_checkout/code-signing-osx/config.sh"
+            if [ -f "$CONFIG_FILE" ]; then
+                source $CONFIG_FILE
+                for dylib in lib*.dylib;
+                do
+                    if [ -f "$dylib" ]; then
+                        codesign --force --timestamp --sign "$APPLE_SIGNATURE" "$dylib"
+                    fi
+                done
+            else 
+                echo "No config file found; skipping codesign."
+            fi
             popd
         ;;
 
