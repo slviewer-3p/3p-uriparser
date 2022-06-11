@@ -126,7 +126,7 @@ pushd "$URIPARSER_SOURCE_DIR"
                   -DURIPARSER_BUILD_TESTS=OFF \
                   -DURIPARSER_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=OFF
 
-            make -j $AUTOBUILD_CPU_COUNT
+            make -j 6
             make install
 
             popd
