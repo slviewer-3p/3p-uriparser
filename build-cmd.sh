@@ -134,12 +134,13 @@ pushd "$URIPARSER_SOURCE_DIR"
             rm -rf build && mkdir build && pushd build
 
             cmake .. -DCMAKE_INSTALL_PREFIX:STRING="${stage}" \
+				  -DCMAKE_INSTALL_LIBDIR:PATH=lib/ \
                   -DCMAKE_CXX_FLAGS="$LL_BUILD_RELEASE" \
                   -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE" \
                   -DURIPARSER_BUILD_TESTS=OFF \
                   -DURIPARSER_BUILD_DOCS=OFF -DBUILD_SHARED_LIBS=OFF
 
-            make -j 6
+            make -j `nproc`
             make install
 
             popd
